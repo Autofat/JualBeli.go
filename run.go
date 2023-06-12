@@ -11,19 +11,27 @@ type barang struct {
 }
 
 type transaksi struct {
-	tanggal string
-	jumlah  int
-	barang  barang
+	tanggal   string
+	idx       int
+	pembelian arrPembelian
+}
+
+type pembelian struct {
+	barang string
+	jumlah int
 }
 
 type arrBarang [NMAX]barang
 type arrTransaksi [NMAX]transaksi
+type arrPembelian [NMAX]pembelian
 
 // ===================================== FUNC MAIN ============================================ //
 func main() {
-	var perintah_main, perintah_barang, n, i int
-	var targetBarang, A, perintah_hapus_barang string
+	var perintah_main, perintah_barang, perintah_transaksi, n, i, m, tgl, brg int
+	var targetBarang, A, perintah_hapus_barang, targetTransaksi, targetTanggal string
 	var b arrBarang
+	var t arrTransaksi
+	// var t arrTransaksi
 	// var t arrTransaksi
 	for perintah_main != 4 {
 		clearScreen()
@@ -31,6 +39,7 @@ func main() {
 		fmt.Print("Silahkan pilih perintah: ")
 		fmt.Scan(&perintah_main)
 		switch perintah_main {
+		// ================================================================= BARANG COMMANDS =================================================================
 		case 1:
 			clearScreen()
 			interfaceBarang()
@@ -89,16 +98,16 @@ func main() {
 					if perintah_hapus_barang == "Y" {
 						hapusBarang(&b, &n, cekBarang(b, n, targetBarang))
 					}
-				}else{				\
-				clearScreen()
-				fmt.Println("=====================| EDIT BARANG |======================")
-				fmt.Println("|                                                        |")
-				fmt.Println("|                [ DATA TIDAK DITEMUKAN ]                |")
-				fmt.Println("|        SILAHKAN CEK KEMBALI DATA YANG INGIN DI EDIT    |")
-				fmt.Println("|                                                        |")
-				fmt.Println("=====================|  TOKO KEREN  |=====================")
-				fmt.Print("          TEKAN [X] UNTUK KEMBALI KE HALAMAN UTAMA          ")
-				fmt.Scan(&A)
+				} else {
+					clearScreen()
+					fmt.Println("====================| HAPUS BARANG |======================")
+					fmt.Println("|                                                        |")
+					fmt.Println("|                [ DATA TIDAK DITEMUKAN ]                |")
+					fmt.Println("|        SILAHKAN CEK KEMBALI DATA YANG INGIN DI EDIT    |")
+					fmt.Println("|                                                        |")
+					fmt.Println("=====================|  TOKO KEREN  |=====================")
+					fmt.Print("          TEKAN [X] UNTUK KEMBALI KE HALAMAN UTAMA          ")
+					fmt.Scan(&A)
 				}
 			} else if perintah_barang == 4 {
 				clearScreen()
@@ -108,12 +117,87 @@ func main() {
 				fmt.Print("          TEKAN [X] UNTUK KEMBALI KE HALAMAN UTAMA          ")
 				fmt.Scan(&A)
 			}
+		// ================================================================= END BARANG COMMANDS ================================================================
 
+		// ================================================================= TRANSAKSI COMMANDS =================================================================
+		case 2:
+			clearScreen()
+			interfaceTransaksi()
+			fmt.Print("Silahkan pilih perintah: ")
+			fmt.Scan(&perintah_transaksi)
+			if perintah_transaksi == 1 {
+				clearScreen()
+				inputTransaksi(&t, &b, &m, &tgl, &brg, n)
+			} else if perintah_transaksi == 2 {
+				clearScreen()
+				fmt.Println("====================| EDIT TRANSAKSI |====================")
+				fmt.Println("MASUKAN TANGGAL TRANSAKSI YANG MAU DI EDIT: ")
+				fmt.Scan(&targetTanggal)
+				CTT := cekTransaksiTanggal(t, m, targetTanggal)
+				if CTT >= 0 {
+					clearScreen()
+					fmt.Println("====================| EDIT TRANSAKSI |====================")
+					fmt.Println("|                                                        |")
+					fmt.Println("|                   [ DATA DITEMUKAN ]                   |")
+					fmt.Println("|       SILAHKAN PILIH NAMA ITEM YANG INGIN DI RUBAH     |")
+					fmt.Println("|                                                        |")
+					fmt.Println("==========================================================")
+					fmt.Println("TANGGAL: ", targetTanggal)
+					fmt.Println("=====================|    BARANG    |=====================")
+					// for i := 0; i < brg; i++ {
+					// 	if t[CTT].pembelian[i].barang != "" {
+					// 		fmt.Println(t[CTT].pembelian[i])
+					// 	}
+					// }
+					fmt.Println(t[CTT].pembelian)
+					fmt.Println("=====================| EDIT BARANG |======================")
+					fmt.Print("MASUKAN NAMA BARANG YG INGIN DI EDIT: ")
+					fmt.Scan(&targetTransaksi)
+					fmt.Println("=====================|  TOKO KEREN  |=====================")
+					CTB := cekTransaksiBarang(t, CTT, targetTransaksi)
+					if CTB >= 0 {
+						clearScreen()
+						fmt.Println("====================| EDIT TRANSAKSI |====================")
+						fmt.Println("|                                                        |")
+						fmt.Println("|                   [ DATA DITEMUKAN ]                   |")
+						fmt.Println("|       SILAHKAN PILIH NAMA ITEM YANG INGIN DI RUBAH     |")
+						fmt.Println("|                                                        |")
+						fmt.Println("==========================================================")
+						fmt.Println("ITEM: ", t[CTT].pembelian[CTB])
+						fmt.Println("=====================|    BARANG    |=====================")
+						editTransaksi(&t, CTT, CTB)
+					}
+				} else {
+					clearScreen()
+					fmt.Println("====================| EDIT TRANSAKSI |====================")
+					fmt.Println("|                                                        |")
+					fmt.Println("|                [ DATA TIDAK DITEMUKAN ]                |")
+					fmt.Println("|          SILAHKAN CEK KEMBALI INPUTAN TANGGAL          |")
+					fmt.Println("|                                                        |")
+					fmt.Println("=====================|  TOKO KEREN  |=====================")
+					fmt.Print("          TEKAN [X] UNTUK KEMBALI KE HALAMAN UTAMA          ")
+					fmt.Scan(&A)
+				}
+			} else if perintah_transaksi == 3 {
+				clearScreen()
+				fmt.Println("====================| HAPUS TRANSAKSI |======================")
+				fmt.Print("PADA TANGGA BERAPA YANG INGIN DI HAPUS: ")
+				fmt.Scan(&targetTanggal)
+				cekTransaksiTanggal(t, n, targetTanggal)
+			} else if perintah_transaksi == 4 {
+				clearScreen()
+				fmt.Println("====================| CEK TRANSAKSI |=====================")
+				displayTransaksi(t, tgl)
+				fmt.Println("=====================|  TOKO KEREN  |=====================")
+				fmt.Print("          TEKAN [X] UNTUK KEMBALI KE HALAMAN UTAMA          ")
+				fmt.Scan(&A)
+
+			}
 		}
-
 	}
-
 }
+
+// ================================================================= END TRANSAKSI COMMANDS =================================================================
 
 // ===================================== END FUNC MAIN ============================================ //
 
@@ -130,7 +214,6 @@ func interfaceMain() {
 	fmt.Println("|                                                         |")
 	fmt.Println("======================|  TOKO KEREN  |=====================")
 }
-
 func interfaceBarang() {
 	// tampilan layar utama (home page awal)
 	fmt.Println("========================| BARANG |=========================")
@@ -186,7 +269,6 @@ func editBarang(b *arrBarang, n, i int) {
 	fmt.Println("DENGAN FORMAT: NAMA-BARANG KATAGORI HARGA-MODAL HARGA-JUAL STOK")
 	fmt.Scan(&b[i].nama, &b[i].kategori, &b[i].hargaModal, &b[i].hargaJual, &b[i].stok)
 }
-
 func cekBarang(b arrBarang, n int, target string) int {
 	for i := 0; i <= n; i++ {
 		if target == b[i].nama {
@@ -208,13 +290,11 @@ func shortingBarang(b *arrBarang, n int) {
 		b[i], b[max] = b[max], b[i]
 	}
 }
-
 func displayBarang(b arrBarang, n int) {
 	for i := 0; i < n; i++ {
 		fmt.Println(b[i])
 	}
 }
-
 func hapusBarang(b *arrBarang, n *int, target int) {
 	for i := target; i < *n; i++ {
 		b[i] = b[i+1]
@@ -226,8 +306,122 @@ func hapusBarang(b *arrBarang, n *int, target int) {
 // ===================================== END FUNC BARANG ============================================ //
 
 // ===================================== FUNC TRANSAKSI ============================================ //
+func inputTransaksi(t *arrTransaksi, b *arrBarang, m, tgl, brg *int, n int) {
+	var namaBarang, tanggal string
+	var jmlBeli int
+	fmt.Println("===================| INPUT TRANSAKSI |====================")
+	fmt.Println("|                                                        |")
+	fmt.Println("|                MASUKAN DATA DENGAN FORMAT              |")
+	fmt.Println("|     TANGGAL-JUAL NOMOR-BARANG JUMLAH-PEMBELIAN         |")
+	fmt.Println("|                                                        |")
+	fmt.Println("=====================|  TOKO KEREN  |=====================")
+	fmt.Scan(&tanggal)
+	fmt.Scan(&namaBarang, &jmlBeli)
+
+	for namaBarang != "XXX" && *brg < NMAX {
+		t[*tgl].tanggal = tanggal
+		t[*tgl].pembelian[t[*tgl].idx].barang = namaBarang
+		t[*tgl].pembelian[t[*tgl].idx].jumlah = jmlBeli
+		t[*tgl].idx++
+		for i := 0; i < n; i++ {
+			if b[i].nama == namaBarang {
+				b[i].penjualan = b[i].penjualan + jmlBeli
+				b[i].stok = b[i].stok - jmlBeli
+			}
+		}
+		*m++
+		*brg++
+		fmt.Scan(&namaBarang, &jmlBeli)
+	}
+	*tgl++
+}
+
+func editTransaksi(t *arrTransaksi, CTT, CTB int) {
+	fmt.Println("DENGAN FORMAT: NAMA-BARANG  JUMLAH-BELI")
+	fmt.Scan(&t[CTT].pembelian[CTB].barang, &t[CTT].pembelian[CTB].jumlah)
+}
+
+func cekTransaksiTanggal(t arrTransaksi, m int, target string) int {
+	for i := 0; i <= m; i++ {
+		if target == t[i].tanggal {
+			return i
+		}
+	}
+	return -1
+}
+
+func cekTransaksiBarang(t arrTransaksi, CTT int, target string) int {
+	for i := 0; i <= t[CTT].idx; i++ {
+		if target == t[CTT].pembelian[i].barang {
+			return i
+		}
+	}
+	return -1
+}
+
+func hapusTransaksi(t *arrTransaksi, m *int, target int) {
+	for i := target; i < *m; i++ {
+		t[i] = t[i+1]
+	}
+	*m--
+}
+
+func displayTransaksi(t arrTransaksi, tgl int) {
+	for j := 0; j < tgl; j++ {
+		fmt.Println(t[j].tanggal)
+		for i := 0; i < t[j].idx; i++ {
+			fmt.Println(t[j].pembelian[i])
+		}
+		fmt.Println("--------------------------------")
+	}
+}
 
 // ===================================== END FUNC TRANSAKSI ============================================ //
+// ===================================== FUNC STATISTIK ============================================ //
+func statistics(b arrBarang, t arrTransaksi, n, m int) {
+	fmt.Println("======================| STATISTIK |======================")
+	fmt.Println("|                                                       |")
+	fmt.Println("|               DATA MODAL DAN PENDAPATAN               |")
+	fmt.Println("|                                                       |")
+	fmt.Println("=========================================================")
+	var totalModal, totalPendapatan float64
+	for i := 0; i < n; i++ {
+		totalModal += b[i].hargaModal * float64(b[i].stok)
+		totalPendapatan += b[i].hargaJual * float64(b[i].penjualan)
+	}
+
+	fmt.Println("Total Modal:", totalModal)
+	fmt.Println("Total Pendapatan:", totalPendapatan)
+	fmt.Println("============================================================")
+	fmt.Println("|                                                          |")
+	fmt.Println("|            [ 5 BARANG PALING BANYAK TERJUAL ]            |")
+	fmt.Println("|                                                          |")
+	fmt.Println("============================================================")
+
+	// Sort by penjualan
+	for i := 0; i < n; i++ {
+		max := i
+		for j := i + 1; j < n; j++ {
+			if b[max].penjualan < b[j].penjualan {
+				max = j
+			}
+		}
+		b[i], b[max] = b[max], b[i]
+	}
+
+	// Display top 5
+	for i := 0; i < 5 && i < n; i++ {
+		fmt.Println(b[i].nama, "-", b[i].penjualan, "unit")
+	}
+	fmt.Println("============================================================")
+	fmt.Println("                      TOKO KEREN                            ")
+	fmt.Println("============================================================")
+	fmt.Println("          TEKAN [X] UNTUK KEMBALI KE HALAMAN UTAMA          ")
+	var A string
+	fmt.Scan(&A)
+}
+
+// ===================================== END FUNC STATISTIK ======================================== //
 func clearScreen() {
 	// membersihkan UI agar enak dilihat
 	fmt.Print("\033[H\033[2J")
