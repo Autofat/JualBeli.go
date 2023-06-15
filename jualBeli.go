@@ -27,7 +27,8 @@ type arrPembelian [NMAX]pembelian
 
 // ===================================== FUNC MAIN ============================================ //
 func main() {
-	var perintah_main, perintah_barang, perintah_transaksi, n, i, m, tgl, brg int
+	var perintah_main, perintah_barang, perintah_transaksi, n, i, m, tgl int
+	var totalModal, totalPendapatan float64
 	var targetBarang, A, perintah_hapus_barang, targetTransaksi, targetTanggal string
 	var b arrBarang
 	var t arrTransaksi
@@ -47,7 +48,7 @@ func main() {
 			fmt.Scan(&perintah_barang)
 			if perintah_barang == 1 {
 				clearScreen()
-				inputBarang(&b, &n)
+				inputBarang(&b, &n, &totalModal)
 			} else if perintah_barang == 2 {
 				clearScreen()
 				fmt.Println("=====================| EDIT BARANG |======================")
@@ -127,7 +128,7 @@ func main() {
 			fmt.Scan(&perintah_transaksi)
 			if perintah_transaksi == 1 {
 				clearScreen()
-				inputTransaksi(&t, &b, &m, &tgl, &brg, n)
+				inputTransaksi(&t, &b, &tgl, n)
 			} else if perintah_transaksi == 2 {
 				clearScreen()
 				fmt.Println("====================| EDIT TRANSAKSI |====================")
@@ -183,7 +184,39 @@ func main() {
 				fmt.Println("====================| HAPUS TRANSAKSI |======================")
 				fmt.Print("PADA TANGGA BERAPA YANG INGIN DI HAPUS: ")
 				fmt.Scan(&targetTanggal)
-				cekTransaksiTanggal(t, n, targetTanggal)
+				CTT := cekTransaksiTanggal(t, n, targetTanggal)
+				if CTT >= 0 {
+					clearScreen()
+					fmt.Println("===================| HAPUS TRANSAKSI |====================")
+					fmt.Println("|                                                        |")
+					fmt.Println("|                   [ DATA DITEMUKAN ]                   |")
+					fmt.Println("|               APAKAH DATA INGIN DI HAPUS               |")
+					fmt.Println("|                       - Y / N -                        |")
+					fmt.Println("|                                                        |")
+					fmt.Println("=====================|  TOKO KEREN  |=====================")
+					for i := 0; i < t[CTT].idx; i++ {
+						fmt.Println(t[CTT].pembelian[i])
+					}
+					fmt.Println("==========================================================")
+					fmt.Scan(&perintah_hapus_barang)
+					if perintah_hapus_barang == "Y" {
+						hapusBarangTransaksi(&t, &b, CTT)
+						hapusTransaksi(&t, &tgl, CTT)
+						fmt.Println(t[CTT].pembelian)
+					}
+				} else {
+					clearScreen()
+					fmt.Println("===================| HAPUS TRANSAKSI |====================")
+					fmt.Println("|                                                        |")
+					fmt.Println("|                [ DATA TIDAK DITEMUKAN ]                |")
+					fmt.Println("|        SILAHKAN CEK KEMBALI TANGGAL TRANSAKSI          |")
+					fmt.Println("|                  YANG INGIN DI HAPUS                   |")
+					fmt.Println("|                                                        |")
+					fmt.Println("=====================|  TOKO KEREN  |=====================")
+					fmt.Print("          TEKAN [X] UNTUK KEMBALI KE HALAMAN UTAMA          ")
+					fmt.Scan(&A)
+
+				}
 			} else if perintah_transaksi == 4 {
 				clearScreen()
 				fmt.Println("====================| CEK TRANSAKSI |=====================")
@@ -193,6 +226,9 @@ func main() {
 				fmt.Scan(&A)
 
 			}
+		case 3:
+			clearScreen()
+			statistics(&b, &t, n, m, totalModal, totalPendapatan)
 		}
 	}
 }
@@ -207,10 +243,10 @@ func interfaceMain() {
 	fmt.Println("======================| ADMIN MENU |=======================")
 	fmt.Println("|                        [ MENU ]                         |")
 	fmt.Println("|                                                         |")
-	fmt.Println("|                    1. Barang                            |")
-	fmt.Println("|                    2. Transaksi                         |")
-	fmt.Println("|                    3. Statistik                         |")
-	fmt.Println("|                    4. Exit                              |")
+	fmt.Println("|                    1. 📦 Barang                         |")
+	fmt.Println("|                    2. 💵 Transaksi                      |")
+	fmt.Println("|                    3. 📊 Statistik                      |")
+	fmt.Println("|                    4. ❌ Exit                           |")
 	fmt.Println("|                                                         |")
 	fmt.Println("======================|  TOKO KEREN  |=====================")
 }
@@ -244,7 +280,7 @@ func interfaceTransaksi() {
 // ===================================== END FUNC INTERFACE ============================================ //
 
 // ===================================== FUNC BARANG ============================================ //
-func inputBarang(b *arrBarang, n *int) {
+func inputBarang(b *arrBarang, n *int, totalModal *float64) {
 	var namaBarang, kategori string
 	var hargaModal, hargaJual float64
 	var stok int
@@ -264,6 +300,10 @@ func inputBarang(b *arrBarang, n *int) {
 		*n++
 		fmt.Scan(&namaBarang, &kategori, &hargaModal, &hargaJual, &stok)
 	}
+	for i := 0; i < *n; i++ {
+		*totalModal += b[i].hargaModal * float64(b[i].stok)
+	}
+
 }
 func editBarang(b *arrBarang, n, i int) {
 	fmt.Println("DENGAN FORMAT: NAMA-BARANG KATAGORI HARGA-MODAL HARGA-JUAL STOK")
@@ -306,31 +346,29 @@ func hapusBarang(b *arrBarang, n *int, target int) {
 // ===================================== END FUNC BARANG ============================================ //
 
 // ===================================== FUNC TRANSAKSI ============================================ //
-func inputTransaksi(t *arrTransaksi, b *arrBarang, m, tgl, brg *int, n int) {
+func inputTransaksi(t *arrTransaksi, b *arrBarang, tgl *int, n int) {
 	var namaBarang, tanggal string
 	var jmlBeli int
 	fmt.Println("===================| INPUT TRANSAKSI |====================")
 	fmt.Println("|                                                        |")
 	fmt.Println("|                MASUKAN DATA DENGAN FORMAT              |")
-	fmt.Println("|     TANGGAL-JUAL NOMOR-BARANG JUMLAH-PEMBELIAN         |")
+	fmt.Println("|      TANGGAL-JUAL NAMA-BARANG JUMLAH-PEMBELIAN         |")
 	fmt.Println("|                                                        |")
 	fmt.Println("=====================|  TOKO KEREN  |=====================")
 	fmt.Scan(&tanggal)
 	fmt.Scan(&namaBarang, &jmlBeli)
 
-	for namaBarang != "XXX" && *brg < NMAX {
+	for namaBarang != "XXX" && t[*tgl].idx < NMAX {
 		t[*tgl].tanggal = tanggal
 		t[*tgl].pembelian[t[*tgl].idx].barang = namaBarang
 		t[*tgl].pembelian[t[*tgl].idx].jumlah = jmlBeli
-		t[*tgl].idx++
 		for i := 0; i < n; i++ {
 			if b[i].nama == namaBarang {
 				b[i].penjualan = b[i].penjualan + jmlBeli
 				b[i].stok = b[i].stok - jmlBeli
 			}
 		}
-		*m++
-		*brg++
+		t[*tgl].idx++
 		fmt.Scan(&namaBarang, &jmlBeli)
 	}
 	*tgl++
@@ -359,11 +397,24 @@ func cekTransaksiBarang(t arrTransaksi, CTT int, target string) int {
 	return -1
 }
 
-func hapusTransaksi(t *arrTransaksi, m *int, target int) {
-	for i := target; i < *m; i++ {
+func hapusTransaksi(t *arrTransaksi, tgl *int, target int) {
+	for i := target; i < *tgl; i++ {
 		t[i] = t[i+1]
+		*tgl--
 	}
-	*m--
+}
+func hapusBarangTransaksi(t *arrTransaksi, b *arrBarang, CTT int) {
+	for i := 0; i < NMAX-1; i++ {
+		for j := 0; j < NMAX-1; j++ {
+			if t[CTT].pembelian[i].barang == b[j].nama {
+				b[j].penjualan = b[j].penjualan - t[CTT].pembelian[i].jumlah
+				b[j].stok = b[j].stok + t[CTT].pembelian[i].jumlah
+			}
+		}
+		t[CTT].pembelian[i] = t[CTT].pembelian[i+1]
+		t[CTT].idx--
+	}
+
 }
 
 func displayTransaksi(t arrTransaksi, tgl int) {
@@ -378,43 +429,31 @@ func displayTransaksi(t arrTransaksi, tgl int) {
 
 // ===================================== END FUNC TRANSAKSI ============================================ //
 // ===================================== FUNC STATISTIK ============================================ //
-func statistics(b arrBarang, t arrTransaksi, n, m int) {
-	fmt.Println("======================| STATISTIK |======================")
-	fmt.Println("|                                                       |")
-	fmt.Println("|               DATA MODAL DAN PENDAPATAN               |")
-	fmt.Println("|                                                       |")
-	fmt.Println("=========================================================")
-	var totalModal, totalPendapatan float64
+func statistics(b *arrBarang, t *arrTransaksi, n, m int, totalModal float64, totalPendapatan float64) {
+	fmt.Println("=======================| STATISTIK |========================")
+	fmt.Println("|                                                          |")
+	fmt.Println("|                 DATA MODAL DAN PENDAPATAN                |")
+	fmt.Println("|                                                          |")
+	fmt.Println("============================================================")
 	for i := 0; i < n; i++ {
-		totalModal += b[i].hargaModal * float64(b[i].stok)
 		totalPendapatan += b[i].hargaJual * float64(b[i].penjualan)
 	}
-
-	fmt.Println("Total Modal:", totalModal)
-	fmt.Println("Total Pendapatan:", totalPendapatan)
+	fmt.Println("Total Modal: Rp.", totalModal)
+	fmt.Println("Total Pendapatan: Rp.", totalPendapatan)
 	fmt.Println("============================================================")
 	fmt.Println("|                                                          |")
 	fmt.Println("|            [ 5 BARANG PALING BANYAK TERJUAL ]            |")
 	fmt.Println("|                                                          |")
 	fmt.Println("============================================================")
 
-	// Sort by penjualan
-	for i := 0; i < n; i++ {
-		max := i
-		for j := i + 1; j < n; j++ {
-			if b[max].penjualan < b[j].penjualan {
-				max = j
-			}
-		}
-		b[i], b[max] = b[max], b[i]
-	}
+	shortingBarang(b, n)
 
 	// Display top 5
 	for i := 0; i < 5 && i < n; i++ {
 		fmt.Println(b[i].nama, "-", b[i].penjualan, "unit")
 	}
 	fmt.Println("============================================================")
-	fmt.Println("                      TOKO KEREN                            ")
+	fmt.Println("|                      TOKO KEREN                          |")
 	fmt.Println("============================================================")
 	fmt.Println("          TEKAN [X] UNTUK KEMBALI KE HALAMAN UTAMA          ")
 	var A string
